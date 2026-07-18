@@ -103,6 +103,7 @@ private:
 	std::condition_variable ctx2;
 	std::condition_variable not_full;
 	std::vector<std::thread> workers;
+    int max_inflight = 100;
 	int max_tsks = 50;
 
 	int threadss = 10;
@@ -261,8 +262,8 @@ public:
 		std::unique_lock<std::mutex> lock(mtx);
 
 		not_full.wait(lock, [this]() {
-			return questions.size() < max_tsks || is;
-			});
+	return (questions.size() + works) < max_inflight || is;
+	});
 
 		if (!add || is)
 			throw std::runtime_error("Thread pool stopped");
