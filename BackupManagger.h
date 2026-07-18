@@ -11,6 +11,8 @@ struct FileJob
 class BackupManager
 {
 public:
+	using PathBatch = std::vector<std::filesystem::path>;
+	using JobBatch = std::vector<FileJob>;
 	BackupManager(const Config& cfg);
 	void run();
 	
@@ -22,12 +24,14 @@ private:
 	Config config;
 	ThreadPool pool;
 	Logger logger;
-	std::shared_ptr<Stage<std::filesystem::path, std::filesystem::path>> filterStage;
-
-	std::shared_ptr<Stage<std::filesystem::path, FileJob>> prepareStage;
-
-	std::shared_ptr<Stage<FileJob, std::filesystem::path>> copyStage;
-
-	std::shared_ptr<Stage<std::filesystem::path, std::filesystem::path>> logStage;
+	std::shared_ptr<Stage<PathBatch, PathBatch>> filterStage;
+	std::shared_ptr<Stage<PathBatch, JobBatch>> prepareStage;
+	std::shared_ptr<Stage<JobBatch, PathBatch>> copyStage;
+	std::shared_ptr<Stage<PathBatch, PathBatch>> logStage;
 	std::filesystem::path finalDest;
+	size_t current_memory = 0;
+	const size_t MAX_MEMORY = 50 * 1024 * 1024; // 50 MB
+	std::mutex mem_mtx;
+	std::condition_variable mem_cv;
+
 };
